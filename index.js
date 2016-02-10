@@ -1,9 +1,13 @@
 var request = require('request')
 var gitterClient = require('./gitter.js')
 
+var bridge;
+
 var opts = {
   gitterApiKey: process.env['GITTERBOT_APIKEY'],
-  gitterRoom: process.env['GITTERBOT_GITTER_ROOM']
+  gitterRoom: process.env['GITTERBOT_GITTER_ROOM'],
+  matrixUserDomain: 'localhost:8080',
+  matrixRoom: '!KzGaZKsadZKVAYCzjl:localhost:8080'
 }
 
 if (!(opts.gitterApiKey && opts.gitterRoom)) {
@@ -43,6 +47,9 @@ request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {u
 
       console.log('gitter->' + gitterRoomId + ' from ' + userName + ':', message.text)
 
+      var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
+      intent.sendText(opts.matrixRoom, message.text)
+
       // mark message as read by bot
       request.post({
         url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + gitterRoomId + '/unreadItems',
@@ -57,3 +64,37 @@ request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {u
     */
   })
 })
+
+var Cli = require("matrix-appservice-bridge").Cli;
+var Bridge = require("matrix-appservice-bridge").Bridge;
+var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
+
+new Cli({
+  port: 9000,
+  registrationPath: "gitter-registration.yaml",
+  generateRegistration: function(reg, callback) {
+    reg.setHomeserverToken(AppServiceRegistration.generateToken());
+    reg.setAppServiceToken(AppServiceRegistration.generateToken());
+    reg.setSenderLocalpart("gitterbot");
+    reg.addRegexPattern("users", "@gitter_.*", true);
+    callback(reg);
+  },
+  run: function(port, config) {
+    bridge = new Bridge({
+      homeserverUrl: "http://localhost:7680",
+      domain: "localhost",
+      registration: "gitter-registration.yaml",
+      controller: {
+        onUserQuery: function(queriedUser) {
+          return {}; // auto-provision users with no additonal data
+        },
+
+        onEvent: function(request, context) {
+          return; // we will handle incoming matrix requests later
+        }
+      }
+    });
+    console.log("Matrix-side listening on port %s", port);
+    bridge.run(port, config);
+  }
+}).run();
