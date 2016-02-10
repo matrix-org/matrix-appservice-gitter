@@ -1,5 +1,4 @@
 var request = require('request')
-var xtend = require('xtend')
 var gitterClient = require('./gitter.js')
 
 module.exports = function (opts) {
