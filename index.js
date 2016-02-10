@@ -4,10 +4,12 @@ var gitterClient = require('./gitter.js')
 var bridge;
 
 var opts = {
+  port: 9000,
   gitterApiKey: process.env['GITTERBOT_APIKEY'],
   gitterRoom: process.env['GITTERBOT_GITTER_ROOM'],
   matrixUserDomain: 'localhost:8080',
-  matrixRoom: '!KzGaZKsadZKVAYCzjl:localhost:8080'
+  matrixRoom: '!KzGaZKsadZKVAYCzjl:localhost:8080',
+  matrixHomeserver: 'http://localhost:7680'
 }
 
 if (!(opts.gitterApiKey && opts.gitterRoom)) {
@@ -66,7 +68,7 @@ var Bridge = require("matrix-appservice-bridge").Bridge;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
 new Cli({
-  port: 9000,
+  port: opts.port,
   registrationPath: "gitter-registration.yaml",
   generateRegistration: function(reg, callback) {
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
@@ -77,7 +79,7 @@ new Cli({
   },
   run: function(port, config) {
     bridge = new Bridge({
-      homeserverUrl: "http://localhost:7680",
+      homeserverUrl: opts.matrixHomeserver,
       domain: "localhost",
       registration: "gitter-registration.yaml",
       controller: {
