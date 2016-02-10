@@ -1,7 +1,7 @@
 var request = require('request')
 var gitterClient = require('./gitter.js')
 
-module.exports = function (opts) {
+module.exports = function (opts, onGitterMessage) {
   var gitter = gitterClient(opts.gitterApiKey)
   var headers = {
     'Accept': 'application/json',
@@ -32,26 +32,14 @@ module.exports = function (opts) {
         var userName = message.fromUser.username
         if (userName === gitterName) return
 
-        var lines = message.text.split('\n')
-        if (lines.length > 4) {
-          lines.splice(3)
-          lines.push('[full message: https://gitter.im/' + opts.gitterRoom + '?at=' + message.id + ']')
-        }
-
-        var text = lines.map(function (line) {
-          return '(' + userName + ') ' + line
-        }).join('\n')
-
         // mark message as read by bot
         request.post({
           url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + gitterRoomId + '/unreadItems',
           headers: headers,
           json: {chat: [ message.id ]}
         })
-        console.log('gitter:', text)
-        /* TODO: send messages toward Matrix
-           ircClient.say(opts.ircChannel, text)
-         */
+
+        onGitterMessage(gitterRoomId, userName, message.text)
       }
 
       /*

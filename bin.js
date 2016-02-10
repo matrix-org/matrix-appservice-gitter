@@ -11,4 +11,8 @@ if (!(opts.gitterApiKey && opts.gitterRoom)) {
   process.exit(1)
 }
 
-gitterBot(opts)
+function onGitterMessage(roomId, fromUser, text) {
+  console.log('gitter->' + roomId + ' from ' + fromUser + ':', text)
+}
+
+gitterBot(opts, onGitterMessage)
