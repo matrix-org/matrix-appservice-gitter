@@ -25,10 +25,11 @@ function log (message) {
   console.error(message)
 }
 
+var gitterRoomId;
+
 request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: opts.gitterRoom} }, function (err, req, json) {
   if (err) return log(err)
-  var gitterRoomId = json.id
-  var postGitterMessageUrl = 'https://api.gitter.im/v1/rooms/' + gitterRoomId + '/chatMessages'
+  gitterRoomId = json.id
 
   request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, function (err, res, json) {
     if (err) return log(err)
@@ -57,11 +58,6 @@ request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {u
         json: {chat: [ message.id ]}
       })
     }
-
-    /*
-     * TODO: relay messages from Matrix using something like:
-       request.post({url: postGitterMessageUrl, headers: headers, json: {text: text}})
-    */
   })
 })
 
@@ -89,8 +85,23 @@ new Cli({
           return {}; // auto-provision users with no additonal data
         },
 
-        onEvent: function(request, context) {
-          return; // we will handle incoming matrix requests later
+        onEvent: function(req, context) {
+          var event = req.getData();
+          if (event.type !== "m.room.message" || !event.content || event.room_id !== opts.matrixRoom) {
+            return;
+          }
+
+          console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
+
+          // gitter supports Markdown. We'll use that to apply a little formatting
+          // to make understanding the text a little easier
+          var text = '*<' + event.user_id + '>*: ' + event.content.body
+
+          request.post({
+            url: 'https://api.gitter.im/v1/rooms/' + gitterRoomId + '/chatMessages',
+            headers: headers,
+            json: {text: text}
+          })
         }
       }
     });
