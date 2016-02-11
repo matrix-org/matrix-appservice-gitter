@@ -13,10 +13,6 @@ var rooms = [
   {matrixRoomId: '!KzGaZKsadZKVAYCzjl:localhost:8080', gitterRoom: 'matrix-org'}
 ]
 
-/* TODO: be able to cope with more than one room
- */
-var room = rooms[0]
-
 if (!opts.gitterApiKey) {
   console.error('You need to set the config env variables (see readme.md)')
   process.exit(1)
@@ -33,31 +29,33 @@ request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, fu
   var gitterName = json[0].username
   var gitterUserId = json[0].id
 
-  request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
-    if (err) return console.log(err)
-    room.gitterRoomId = json.id
+  rooms.forEach(function(room) {
+    request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
+      if (err) return console.log(err)
+      room.gitterRoomId = json.id
 
-    gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
+      gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
 
-    function gitterMessage (data) {
-      if (data.operation !== 'create') return
-      var message = data.model
-      if (!message.fromUser) return
-      var userName = message.fromUser.username
-      if (userName === gitterName) return
+      function gitterMessage (data) {
+        if (data.operation !== 'create') return
+        var message = data.model
+        if (!message.fromUser) return
+        var userName = message.fromUser.username
+        if (userName === gitterName) return
 
-      console.log('gitter->' + room.gitterRoomId + ' from ' + userName + ':', message.text)
+        console.log('gitter->' + room.gitterRoomId + ' from ' + userName + ':', message.text)
 
-      var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
-      intent.sendText(room.matrixRoomId, message.text)
+        var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
+        intent.sendText(room.matrixRoomId, message.text)
 
-      // mark message as read by bot
-      request.post({
-        url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + room.gitterRoomId + '/unreadItems',
-        headers: headers,
-        json: {chat: [ message.id ]}
-      })
-    }
+        // mark message as read by bot
+        request.post({
+          url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + room.gitterRoomId + '/unreadItems',
+          headers: headers,
+          json: {chat: [ message.id ]}
+        })
+      }
+    })
   })
 })
 
@@ -86,11 +84,20 @@ new Cli({
 
         onEvent: function(req, context) {
           var event = req.getData();
-          if (event.type !== "m.room.message" || !event.content || event.room_id !== room.matrixRoomId) {
+          if (event.type !== "m.room.message" || !event.content) {
             return;
           }
 
           console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
+
+          var room = rooms.find(function (r) {
+            return r.matrixRoomId == event.room_id
+          })
+
+          if (!room) {
+            console.log("  Wasn't expecting this room; ignore")
+            return
+          }
 
           // gitter supports Markdown. We'll use that to apply a little formatting
           // to make understanding the text a little easier
