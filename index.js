@@ -4,7 +4,6 @@ var gitterClient = require('./gitter.js')
 var bridge;
 
 var opts = {
-  port: 9000,
   gitterApiKey: process.env['GITTERBOT_APIKEY'],
   matrixUserDomain: 'localhost:8080',
   matrixHomeserver: 'http://localhost:7680'
@@ -71,7 +70,6 @@ var Bridge = require("matrix-appservice-bridge").Bridge;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
 new Cli({
-  port: opts.port,
   registrationPath: "gitter-registration.yaml",
   generateRegistration: function(reg, callback) {
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
