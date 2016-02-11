@@ -28,16 +28,12 @@ var headers = {
   'Authorization': 'Bearer ' + opts.gitterApiKey
 }
 
-function log (message) {
-  console.error(message)
-}
-
 request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
-  if (err) return log(err)
+  if (err) return console.log(err)
   room.gitterRoomId = json.id
 
   request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, function (err, res, json) {
-    if (err) return log(err)
+    if (err) return console.log(err)
     var gitterName = json[0].username
     var gitterUserId = json[0].id
 
