@@ -1,29 +1,22 @@
 var request = require('request')
 var gitterClient = require('./gitter.js')
 
-var opts = {
-  gitterApiKey: process.env['GITTERBOT_APIKEY'],
-}
+// Needs to be shared
+var gitterHeaders;
 
-if (!opts.gitterApiKey) {
-  console.error('You need to set the config env variables (see readme.md)')
-  process.exit(1)
-}
-
-var gitterHeaders = {
-  'Accept': 'application/json',
-  'Authorization': 'Bearer ' + opts.gitterApiKey
-}
-
-function startGitterBridge(rooms, onGitterMessage) {
-  var gitter = gitterClient(opts.gitterApiKey)
+function startGitterBridge(config, onGitterMessage) {
+  var gitter = gitterClient(config.gitter_api_key)
+  gitterHeaders = {
+    'Accept': 'application/json',
+    'Authorization': 'Bearer ' + config.gitter_api_key
+  }
 
   request({url: 'https://api.gitter.im/v1/user', headers: gitterHeaders, json: true}, function (err, res, json) {
     if (err) return console.log(err)
     var gitterName = json[0].username
     var gitterUserId = json[0].id
 
-    rooms.forEach(function(room) {
+    config.rooms.forEach(function(room) {
       request.post({ url: 'https://api.gitter.im/v1/rooms', headers: gitterHeaders, json: {uri: room.gitter_room} }, function (err, req, json) {
         if (err) return console.log(err)
         room.gitterRoomId = json.id
@@ -110,7 +103,7 @@ new Cli({
     });
     console.log("Matrix-side listening on port %s", port);
 
-    startGitterBridge(config.rooms, function (room, userName, text) {
+    startGitterBridge(config, function (room, userName, text) {
       var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain)
       intent.sendText(room.matrix_room_id, text)
     })
