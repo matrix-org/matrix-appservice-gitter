@@ -28,14 +28,14 @@ var headers = {
   'Authorization': 'Bearer ' + opts.gitterApiKey
 }
 
-request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
+request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, function (err, res, json) {
   if (err) return console.log(err)
-  room.gitterRoomId = json.id
+  var gitterName = json[0].username
+  var gitterUserId = json[0].id
 
-  request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, function (err, res, json) {
+  request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
     if (err) return console.log(err)
-    var gitterName = json[0].username
-    var gitterUserId = json[0].id
+    room.gitterRoomId = json.id
 
     gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
 
