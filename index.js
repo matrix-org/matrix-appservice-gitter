@@ -1,8 +1,6 @@
 var request = require('request')
 var gitterClient = require('./gitter.js')
 
-var bridge;
-
 var opts = {
   gitterApiKey: process.env['GITTERBOT_APIKEY'],
   matrixUserDomain: 'localhost:8080',
@@ -18,46 +16,48 @@ if (!opts.gitterApiKey) {
   process.exit(1)
 }
 
-var gitter = gitterClient(opts.gitterApiKey)
-var headers = {
+var gitterHeaders = {
   'Accept': 'application/json',
   'Authorization': 'Bearer ' + opts.gitterApiKey
 }
 
-request({url: 'https://api.gitter.im/v1/user', headers: headers, json: true}, function (err, res, json) {
-  if (err) return console.log(err)
-  var gitterName = json[0].username
-  var gitterUserId = json[0].id
+function startGitterBridge(rooms, onGitterMessage) {
+  var gitter = gitterClient(opts.gitterApiKey)
 
-  rooms.forEach(function(room) {
-    request.post({ url: 'https://api.gitter.im/v1/rooms', headers: headers, json: {uri: room.gitterRoom} }, function (err, req, json) {
-      if (err) return console.log(err)
-      room.gitterRoomId = json.id
+  request({url: 'https://api.gitter.im/v1/user', headers: gitterHeaders, json: true}, function (err, res, json) {
+    if (err) return console.log(err)
+    var gitterName = json[0].username
+    var gitterUserId = json[0].id
 
-      gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
+    rooms.forEach(function(room) {
+      request.post({ url: 'https://api.gitter.im/v1/rooms', headers: gitterHeaders, json: {uri: room.gitterRoom} }, function (err, req, json) {
+        if (err) return console.log(err)
+        room.gitterRoomId = json.id
 
-      function gitterMessage (data) {
-        if (data.operation !== 'create') return
-        var message = data.model
-        if (!message.fromUser) return
-        var userName = message.fromUser.username
-        if (userName === gitterName) return
+        gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
 
-        console.log('gitter->' + room.gitterRoomId + ' from ' + userName + ':', message.text)
+        function gitterMessage (data) {
+          if (data.operation !== 'create') return
+          var message = data.model
+          if (!message.fromUser) return
+          var userName = message.fromUser.username
+          if (userName === gitterName) return
 
-        var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
-        intent.sendText(room.matrixRoomId, message.text)
+          console.log('gitter->' + room.gitterRoomId + ' from ' + userName + ':', message.text)
 
-        // mark message as read by bot
-        request.post({
-          url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + room.gitterRoomId + '/unreadItems',
-          headers: headers,
-          json: {chat: [ message.id ]}
-        })
-      }
+          onGitterMessage(room, userName, message.text)
+
+          // mark message as read by bot
+          request.post({
+            url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + room.gitterRoomId + '/unreadItems',
+            headers: gitterHeaders,
+            json: {chat: [ message.id ]}
+          })
+        }
+      })
     })
   })
-})
+}
 
 var Cli = require("matrix-appservice-bridge").Cli;
 var Bridge = require("matrix-appservice-bridge").Bridge;
@@ -73,7 +73,7 @@ new Cli({
     callback(reg);
   },
   run: function(port, config) {
-    bridge = new Bridge({
+    var bridge = new Bridge({
       homeserverUrl: opts.matrixHomeserver,
       domain: "localhost",
       registration: "gitter-registration.yaml",
@@ -105,13 +105,19 @@ new Cli({
 
           request.post({
             url: 'https://api.gitter.im/v1/rooms/' + room.gitterRoomId + '/chatMessages',
-            headers: headers,
+            headers: gitterHeaders,
             json: {text: text}
           })
         }
       }
     });
     console.log("Matrix-side listening on port %s", port);
+
+    startGitterBridge(rooms, function (room, userName, text) {
+      var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
+      intent.sendText(room.matrixRoomId, text)
+    })
+
     bridge.run(port, config);
   }
 }).run();
