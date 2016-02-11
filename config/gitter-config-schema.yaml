@@ -1,0 +1,17 @@
+type: object
+requires: ["matrix_homeserver", "matrix_user_domain", "rooms"]
+properties:
+  matrix_homeserver:
+    type: string
+  matrix_user_domain:
+    type: string
+  rooms:
+    type: array
+    items:
+      type: object
+      required: ["matrix_room_id", "gitter_room"]
+      properties:
+        matrix_room_id:
+          type: string
+        gitter_room:
+          type: string

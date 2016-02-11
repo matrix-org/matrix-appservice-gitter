@@ -1,0 +1,5 @@
+matrix_homeserver: "http://example.com:8008"
+matrix_user_domain: "example.com"
+rooms:
+  - matrix_room_id: '!aBcDeF:example.com'
+    gitter_room: 'your-room-here'

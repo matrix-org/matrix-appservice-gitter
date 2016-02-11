@@ -3,13 +3,7 @@ var gitterClient = require('./gitter.js')
 
 var opts = {
   gitterApiKey: process.env['GITTERBOT_APIKEY'],
-  matrixUserDomain: 'localhost:8080',
-  matrixHomeserver: 'http://localhost:7680'
 }
-
-var rooms = [
-  {matrixRoomId: '!KzGaZKsadZKVAYCzjl:localhost:8080', gitterRoom: 'matrix-org'}
-]
 
 if (!opts.gitterApiKey) {
   console.error('You need to set the config env variables (see readme.md)')
@@ -30,7 +24,7 @@ function startGitterBridge(rooms, onGitterMessage) {
     var gitterUserId = json[0].id
 
     rooms.forEach(function(room) {
-      request.post({ url: 'https://api.gitter.im/v1/rooms', headers: gitterHeaders, json: {uri: room.gitterRoom} }, function (err, req, json) {
+      request.post({ url: 'https://api.gitter.im/v1/rooms', headers: gitterHeaders, json: {uri: room.gitter_room} }, function (err, req, json) {
         if (err) return console.log(err)
         room.gitterRoomId = json.id
 
@@ -65,6 +59,9 @@ var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegis
 
 new Cli({
   registrationPath: "gitter-registration.yaml",
+  bridgeConfig: {
+    schema: "config/gitter-config-schema.yaml",
+  },
   generateRegistration: function(reg, callback) {
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
     reg.setAppServiceToken(AppServiceRegistration.generateToken());
@@ -74,7 +71,7 @@ new Cli({
   },
   run: function(port, config) {
     var bridge = new Bridge({
-      homeserverUrl: opts.matrixHomeserver,
+      homeserverUrl: config.matrix_homeserver,
       domain: "localhost",
       registration: "gitter-registration.yaml",
       controller: {
@@ -90,8 +87,8 @@ new Cli({
 
           console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
 
-          var room = rooms.find(function (r) {
-            return r.matrixRoomId == event.room_id
+          var room = config.rooms.find(function (r) {
+            return r.matrix_room_id == event.room_id
           })
 
           if (!room) {
@@ -113,9 +110,9 @@ new Cli({
     });
     console.log("Matrix-side listening on port %s", port);
 
-    startGitterBridge(rooms, function (room, userName, text) {
-      var intent = bridge.getIntent('@gitter_' + userName + ':' + opts.matrixUserDomain)
-      intent.sendText(room.matrixRoomId, text)
+    startGitterBridge(config.rooms, function (room, userName, text) {
+      var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain)
+      intent.sendText(room.matrix_room_id, text)
     })
 
     bridge.run(port, config);
