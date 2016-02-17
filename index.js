@@ -104,8 +104,11 @@ new Cli({
     console.log("Matrix-side listening on port %s", port);
 
     startGitterBridge(config, function (room, userName, text) {
-      var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain)
-      intent.sendText(room.matrix_room_id, text)
+      var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain);
+      // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
+      // that once only, lazily, at user account creation time?
+      intent.setDisplayName(userName + ' (Gitter)');
+      intent.sendText(room.matrix_room_id, text);
     })
 
     bridge.run(port, config);
