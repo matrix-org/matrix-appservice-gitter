@@ -1,3 +1,4 @@
+/* BEGIN LEGACY */
 var request = require('request')
 var legacyGitterClient = require('./gitter.js')
 
@@ -45,12 +46,17 @@ function startGitterBridge(config, onGitterMessage) {
     })
   })
 }
+/* END LEGACY */
+
+var Gitter = require('node-gitter');
 
 var Cli = require("matrix-appservice-bridge").Cli;
 var Bridge = require("matrix-appservice-bridge").Bridge;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
 function runBridge(port, config) {
+  var gitter = new Gitter(config.gitter_api_key);
+
   var bridge = new Bridge({
     homeserverUrl: config.matrix_homeserver,
     domain: "localhost",
@@ -68,24 +74,24 @@ function runBridge(port, config) {
 
         console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
 
-        var room = config.rooms.find(function (r) {
+        var roomConfig = config.rooms.find(function (r) {
           return r.matrix_room_id == event.room_id
         })
 
-        if (!room) {
-          console.log("  Wasn't expecting this room; ignore")
-          return
+        if (!roomConfig) {
+          console.log("  Wasn't expecting this room; ignore");
+          return;
         }
 
         // gitter supports Markdown. We'll use that to apply a little formatting
         // to make understanding the text a little easier
         var text = '*<' + event.user_id + '>*: ' + event.content.body
 
-        request.post({
-          url: 'https://api.gitter.im/v1/rooms/' + room.gitterRoomId + '/chatMessages',
-          headers: gitterHeaders,
-          json: {text: text}
-        })
+        gitter.rooms.find(roomConfig.gitterRoomId).then(function (room) {
+          room.send(text);
+        });
+
+        return;
       }
     }
   });
