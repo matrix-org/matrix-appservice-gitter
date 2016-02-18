@@ -50,6 +50,58 @@ var Cli = require("matrix-appservice-bridge").Cli;
 var Bridge = require("matrix-appservice-bridge").Bridge;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
+function runBridge(port, config) {
+  var bridge = new Bridge({
+    homeserverUrl: config.matrix_homeserver,
+    domain: "localhost",
+    registration: "gitter-registration.yaml",
+    controller: {
+      onUserQuery: function(queriedUser) {
+        return {}; // auto-provision users with no additonal data
+      },
+
+      onEvent: function(req, context) {
+        var event = req.getData();
+        if (event.type !== "m.room.message" || !event.content) {
+          return;
+        }
+
+        console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
+
+        var room = config.rooms.find(function (r) {
+          return r.matrix_room_id == event.room_id
+        })
+
+        if (!room) {
+          console.log("  Wasn't expecting this room; ignore")
+          return
+        }
+
+        // gitter supports Markdown. We'll use that to apply a little formatting
+        // to make understanding the text a little easier
+        var text = '*<' + event.user_id + '>*: ' + event.content.body
+
+        request.post({
+          url: 'https://api.gitter.im/v1/rooms/' + room.gitterRoomId + '/chatMessages',
+          headers: gitterHeaders,
+          json: {text: text}
+        })
+      }
+    }
+  });
+  console.log("Matrix-side listening on port %s", port);
+
+  startGitterBridge(config, function (room, userName, text) {
+    var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain);
+    // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
+    // that once only, lazily, at user account creation time?
+    intent.setDisplayName(userName + ' (Gitter)');
+    intent.sendText(room.matrix_room_id, text);
+  })
+
+  bridge.run(port, config);
+}
+
 new Cli({
   registrationPath: "gitter-registration.yaml",
   bridgeConfig: {
@@ -62,55 +114,5 @@ new Cli({
     reg.addRegexPattern("users", "@gitter_.*", true);
     callback(reg);
   },
-  run: function(port, config) {
-    var bridge = new Bridge({
-      homeserverUrl: config.matrix_homeserver,
-      domain: "localhost",
-      registration: "gitter-registration.yaml",
-      controller: {
-        onUserQuery: function(queriedUser) {
-          return {}; // auto-provision users with no additonal data
-        },
-
-        onEvent: function(req, context) {
-          var event = req.getData();
-          if (event.type !== "m.room.message" || !event.content) {
-            return;
-          }
-
-          console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
-
-          var room = config.rooms.find(function (r) {
-            return r.matrix_room_id == event.room_id
-          })
-
-          if (!room) {
-            console.log("  Wasn't expecting this room; ignore")
-            return
-          }
-
-          // gitter supports Markdown. We'll use that to apply a little formatting
-          // to make understanding the text a little easier
-          var text = '*<' + event.user_id + '>*: ' + event.content.body
-
-          request.post({
-            url: 'https://api.gitter.im/v1/rooms/' + room.gitterRoomId + '/chatMessages',
-            headers: gitterHeaders,
-            json: {text: text}
-          })
-        }
-      }
-    });
-    console.log("Matrix-side listening on port %s", port);
-
-    startGitterBridge(config, function (room, userName, text) {
-      var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain);
-      // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
-      // that once only, lazily, at user account creation time?
-      intent.setDisplayName(userName + ' (Gitter)');
-      intent.sendText(room.matrix_room_id, text);
-    })
-
-    bridge.run(port, config);
-  }
+  run: runBridge
 }).run();
