@@ -1,11 +1,11 @@
 var request = require('request')
-var gitterClient = require('./gitter.js')
+var legacyGitterClient = require('./gitter.js')
 
 // Needs to be shared
 var gitterHeaders;
 
 function startGitterBridge(config, onGitterMessage) {
-  var gitter = gitterClient(config.gitter_api_key)
+  var gitter = legacyGitterClient(config.gitter_api_key)
   gitterHeaders = {
     'Accept': 'application/json',
     'Authorization': 'Bearer ' + config.gitter_api_key
