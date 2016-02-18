@@ -1,53 +1,3 @@
-/* BEGIN LEGACY */
-var request = require('request')
-var legacyGitterClient = require('./gitter.js')
-
-// Needs to be shared
-var gitterHeaders;
-
-function startGitterBridge(config, onGitterMessage) {
-  var gitter = legacyGitterClient(config.gitter_api_key)
-  gitterHeaders = {
-    'Accept': 'application/json',
-    'Authorization': 'Bearer ' + config.gitter_api_key
-  }
-
-  request({url: 'https://api.gitter.im/v1/user', headers: gitterHeaders, json: true}, function (err, res, json) {
-    if (err) return console.log(err)
-    var gitterName = json[0].username
-    var gitterUserId = json[0].id
-
-    config.rooms.forEach(function(room) {
-      request.post({ url: 'https://api.gitter.im/v1/rooms', headers: gitterHeaders, json: {uri: room.gitter_room} }, function (err, req, json) {
-        if (err) return console.log(err)
-        room.gitterRoomId = json.id
-
-        gitter.subscribe('/api/v1/rooms/' + room.gitterRoomId + '/chatMessages', gitterMessage, {})
-
-        function gitterMessage (data) {
-          if (data.operation !== 'create') return
-          var message = data.model
-          if (!message.fromUser) return
-          var userName = message.fromUser.username
-          if (userName === gitterName) return
-
-          console.log('gitter->' + room.gitterRoomId + ' from ' + userName + ':', message.text)
-
-          onGitterMessage(room, userName, message.text)
-
-          // mark message as read by bot
-          request.post({
-            url: 'https://api.gitter.im/v1/user/' + gitterUserId + '/rooms/' + room.gitterRoomId + '/unreadItems',
-            headers: gitterHeaders,
-            json: {chat: [ message.id ]}
-          })
-        }
-      })
-    })
-  })
-}
-/* END LEGACY */
-
 var Gitter = require('node-gitter');
 
 var Cli = require("matrix-appservice-bridge").Cli;
@@ -97,13 +47,48 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  startGitterBridge(config, function (room, userName, text) {
-    var intent = bridge.getIntent('@gitter_' + userName + ':' + config.matrix_user_domain);
-    // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
-    // that once only, lazily, at user account creation time?
-    intent.setDisplayName(userName + ' (Gitter)');
-    intent.sendText(room.matrix_room_id, text);
-  })
+  // We have to find out our own gitter user ID so we can ignore reflections of
+  // messages we sent
+  gitter.currentUser().then(function (u) {
+    var gitterUserId = u.id;
+
+    function onNewGitterRoom(roomConfig) {
+      var roomName = roomConfig.gitter_room;
+
+      gitter.rooms.join(roomName).then(function (room) {
+        var events = room.streaming().chatMessages();
+
+        // TODO(paul): Terrible hack to make the other join path work
+        roomConfig.gitterRoomId = room.id;
+
+        events.on('chatMessages', function(message) {
+          if (message.operation !== 'create' ||
+              !message.model.fromUser) {
+            return;
+          }
+
+          var fromUser = message.model.fromUser;
+
+          if(fromUser.id == gitterUserId) {
+            // Ignore a reflection of my own messages
+            return;
+          }
+
+          console.log('gitter->' + roomName + ' from ' + fromUser.username + ':', message.model.text)
+
+          var intent = bridge.getIntent('@gitter_' + fromUser.username + ':' + config.matrix_user_domain);
+          // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
+          // that once only, lazily, at user account creation time?
+          intent.setDisplayName(fromUser.displayName + ' (Gitter)');
+
+          // TODO(paul): We could send an HTML message if we looked in message.model.html
+          intent.sendText(roomConfig.matrix_room_id, message.model.text);
+        });
+      });
+    }
+
+    config.rooms.forEach(onNewGitterRoom);
+  });
 
   bridge.run(port, config);
 }
