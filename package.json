@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "matrix-appservice-bridge": "^0.1.1",
-    "node-gitter": "^1.9"
+    "node-gitter": "^1.2"
   },
   "devDependencies": {},
   "scripts": {
