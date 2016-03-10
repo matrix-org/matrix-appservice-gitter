@@ -9,7 +9,7 @@ function runBridge(port, config) {
 
   var bridge = new Bridge({
     homeserverUrl: config.matrix_homeserver,
-    domain: "localhost",
+    domain: config.matrix_user_domain,
     registration: "gitter-registration.yaml",
     controller: {
       onUserQuery: function(queriedUser) {
@@ -18,6 +18,13 @@ function runBridge(port, config) {
 
       onEvent: function(req, context) {
         var event = req.getData();
+
+        if (event.type == "m.room.member" &&
+            event.state_key == bridge.getBot().getUserId()) {
+          console.log('matrix member event for myself');
+          return;
+        }
+
         if (event.type !== "m.room.message" || !event.content) {
           return;
         }
