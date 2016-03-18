@@ -4,7 +4,9 @@
   "description": "Matrix<->Gitter Bridge Application Service",
   "main": "index.js",
   "dependencies": {
+    "bluebird": "^3.1.1",
     "matrix-appservice-bridge": "^0.1.1",
+    "matrix-js-sdk": "^0.2.1",
     "node-gitter": "^1.2"
   },
   "devDependencies": {},

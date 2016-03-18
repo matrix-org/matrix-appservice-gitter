@@ -1,8 +1,15 @@
+var Promise = require("bluebird");
+
 var Gitter = require('node-gitter');
 
 var Cli = require("matrix-appservice-bridge").Cli;
 var Bridge = require("matrix-appservice-bridge").Bridge;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
+
+var MatrixRoom = require("matrix-appservice-bridge").MatrixRoom;
+
+// TODO: maybe we'll extend it later
+var GitterRoom = require("matrix-appservice-bridge").RemoteRoom;
 
 function runBridge(port, config) {
   var gitter = new Gitter(config.gitter_api_key);
@@ -145,10 +152,57 @@ function runBridge(port, config) {
     if (cmd == "plumb") {
       var matrixId = args.shift();
       var gitterName = args.shift();
-      console.log("  TODO: plumb matrix-id " + matrixId + " to " + gitterName);
+
+      var store = bridge.getRoomStore();
+
+      Promise.all([
+        store.getRemoteLinks(matrixId),
+        store.getMatrixLinks(gitterName)
+      ]).then(function (result) {
+        var remoteLinks = result[0];
+        var matrixLinks = result[1];
+
+        if (remoteLinks.length) {
+          return respond("Cannot plumb - matrix-id " + matrixId + " is already plumbed to " + remoteLinks[0].remote);
+        }
+        else if (matrixLinks.length) {
+          return respond("Cannot plumb - gitter-name " + gitterName + " is already plumbed to " + matrixLinks[0].matrix);
+        }
+
+        var matrixRoom = new MatrixRoom(matrixId);
+        var gitterRoom = new GitterRoom(gitterName);
+
+        return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(function () {
+          respond("Plumbed");
+          // TODO: start the room bridging
+        });
+      });
     }
     else if (cmd == "unplumb") {
-      var matrixId = args.shift();
+      var id = args.shift();
+      var linkPromise;
+
+      var store = bridge.getRoomStore();
+
+      if (id.match(/^!/)) {
+        linkPromise = store.getRemoteLinks(id);
+      }
+      else {
+        linkPromise = store.getMatrixLinks(id);
+      }
+
+      linkPromise.then(function (links) {
+        if (!links.length) {
+          return respond("Cannot unplumb - not known");
+        }
+
+        var link = links[0];
+        return store.unlinkRoomIds(link.matrix, link.remote).then(function () {
+          respond("Unplumbed");
+          // TODO: stop the room bridging
+        });
+      })
+
       console.log("  TODO: unplumb matrix-id" + matrixId);
     }
     else {
