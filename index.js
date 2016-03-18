@@ -11,6 +11,8 @@ var MatrixRoom = require("matrix-appservice-bridge").MatrixRoom;
 // TODO: maybe we'll extend it later
 var GitterRoom = require("matrix-appservice-bridge").RemoteRoom;
 
+var BridgedRoom = require("./lib/BridgedRoom");
+
 function runBridge(port, config) {
   var gitter = new Gitter(config.gitter_api_key);
 
@@ -90,6 +92,12 @@ function runBridge(port, config) {
     function onNewGitterRoom(roomConfig) {
       var roomName = roomConfig.gitter_room;
 
+      var bridgedRoom = new BridgedRoom(bridge, config,
+          new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomName)
+      );
+
+      // TODO: store the bridgedRoom somewhere
+
       gitter.rooms.join(roomName).then(function (room) {
         var events = room.streaming().chatMessages();
 
@@ -102,22 +110,12 @@ function runBridge(port, config) {
             return;
           }
 
-          var fromUser = message.model.fromUser;
-
-          if(fromUser.id == gitterUserId) {
+          if(message.model.fromUser.id == gitterUserId) {
             // Ignore a reflection of my own messages
             return;
           }
 
-          console.log('gitter->' + roomName + ' from ' + fromUser.username + ':', message.model.text)
-
-          var intent = bridge.getIntent('@gitter_' + fromUser.username + ':' + config.matrix_user_domain);
-          // TODO(paul): this sets the profile name *every* line. Surely there's a way to do
-          // that once only, lazily, at user account creation time?
-          intent.setDisplayName(fromUser.displayName + ' (Gitter)');
-
-          // TODO(paul): We could send an HTML message if we looked in message.model.html
-          intent.sendText(roomConfig.matrix_room_id, message.model.text);
+          bridgedRoom.onGitterMessage(message);
         });
       });
     }
