@@ -129,7 +129,31 @@ function runBridge(port, config) {
   }
 
   function onMatrixAdminMessage(event) {
-    console.log("TODO: message in admin room");
+    var cmd = event.content.body;
+    console.log("Admin: " + cmd);
+
+    function respond(message) {
+      bridge.getIntent().sendText(event.room_id,
+          event.user_id + ": " + message
+      );
+    }
+
+    var args = cmd.match(/(?:[^\s"]+|"[^"]*")+/g);
+    cmd = args.shift();
+
+    // TODO(paul): Turn this into a nicer introspective lookup on methods or something
+    if (cmd == "plumb") {
+      var matrixId = args.shift();
+      var gitterName = args.shift();
+      console.log("  TODO: plumb matrix-id " + matrixId + " to " + gitterName);
+    }
+    else if (cmd == "unplumb") {
+      var matrixId = args.shift();
+      console.log("  TODO: unplumb matrix-id" + matrixId);
+    }
+    else {
+      respond("Unrecognised command: " + cmd);
+    }
   }
 
   function relayToMatrix(roomConfig, event) {
