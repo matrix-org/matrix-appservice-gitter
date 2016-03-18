@@ -149,7 +149,7 @@ function runBridge(port, config) {
     cmd = args.shift();
 
     // TODO(paul): Turn this into a nicer introspective lookup on methods or something
-    if (cmd == "plumb") {
+    if (cmd == "link") {
       var matrixId = args.shift();
       var gitterName = args.shift();
 
@@ -163,22 +163,22 @@ function runBridge(port, config) {
         var matrixLinks = result[1];
 
         if (remoteLinks.length) {
-          return respond("Cannot plumb - matrix-id " + matrixId + " is already plumbed to " + remoteLinks[0].remote);
+          return respond("Cannot link - matrix-id " + matrixId + " is already linked to " + remoteLinks[0].remote);
         }
         else if (matrixLinks.length) {
-          return respond("Cannot plumb - gitter-name " + gitterName + " is already plumbed to " + matrixLinks[0].matrix);
+          return respond("Cannot link - gitter-name " + gitterName + " is already linked to " + matrixLinks[0].matrix);
         }
 
         var matrixRoom = new MatrixRoom(matrixId);
         var gitterRoom = new GitterRoom(gitterName);
 
         return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(function () {
-          respond("Plumbed");
+          respond("Linked");
           // TODO: start the room bridging
         });
       });
     }
-    else if (cmd == "unplumb") {
+    else if (cmd == "unlink") {
       var id = args.shift();
       var linkPromise;
 
@@ -193,17 +193,15 @@ function runBridge(port, config) {
 
       linkPromise.then(function (links) {
         if (!links.length) {
-          return respond("Cannot unplumb - not known");
+          return respond("Cannot unlink - not known");
         }
 
         var link = links[0];
         return store.unlinkRoomIds(link.matrix, link.remote).then(function () {
-          respond("Unplumbed");
+          respond("Unlinked");
           // TODO: stop the room bridging
         });
       })
-
-      console.log("  TODO: unplumb matrix-id" + matrixId);
     }
     else {
       respond("Unrecognised command: " + cmd);
