@@ -47,38 +47,29 @@ function runBridge(port, config) {
 
         console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
 
+        var handled = false;
+
+        if (config.matrix_admin_room && event.room_id == config.matrix_admin_room) {
+          onMatrixAdminMessage(event);
+          handled = true;
+        }
+
         var roomConfig = config.rooms.find(function (r) {
           return r.matrix_room_id == event.room_id
         })
 
-        if (!roomConfig) {
-          console.log("  Wasn't expecting this room; ignore");
-          return;
+        if (roomConfig) {
+          relayToMatrix(roomConfig, event);
+          handled = true;
         }
 
-        // gitter supports Markdown. We'll use that to apply a little formatting
-        // to make understanding the text a little easier
-        var text = '*<' + event.user_id + '>*: ' + event.content.body
-
-        gitter.rooms.find(roomConfig.gitterRoomId).then(function (room) {
-          room.send(text);
-        });
-
-        return;
+        if (!handled) {
+          console.log("  Wasn't expecting this room; ignore");
+        }
       }
     }
   });
   console.log("Matrix-side listening on port %s", port);
-
-  function onBotInvited(room_id) {
-    bridge.getIntent().join(room_id);
-  }
-
-  function onBotJoined(room_id) {
-  }
-
-  function onBotLeft(room_id) {
-  }
 
   // We have to find out our own gitter user ID so we can ignore reflections of
   // messages we sent
@@ -122,6 +113,30 @@ function runBridge(port, config) {
 
     config.rooms.forEach(onNewGitterRoom);
   });
+
+  function onBotInvited(room_id) {
+    bridge.getIntent().join(room_id);
+  }
+
+  function onBotJoined(room_id) {
+  }
+
+  function onBotLeft(room_id) {
+  }
+
+  function onMatrixAdminMessage(event) {
+    console.log("TODO: message in admin room");
+  }
+
+  function relayToMatrix(roomConfig, event) {
+    // gitter supports Markdown. We'll use that to apply a little formatting
+    // to make understanding the text a little easier
+    var text = '*<' + event.user_id + '>*: ' + event.content.body
+
+    gitter.rooms.find(roomConfig.gitterRoomId).then(function (room) {
+      room.send(text);
+    });
+  }
 
   bridge.run(port, config);
 }

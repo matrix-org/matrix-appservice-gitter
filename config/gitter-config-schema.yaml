@@ -17,3 +17,5 @@ properties:
           type: string
         gitter_room:
           type: string
+  matrix_admin_room:
+    type: string
