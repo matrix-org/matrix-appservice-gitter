@@ -21,7 +21,23 @@ function runBridge(port, config) {
 
         if (event.type == "m.room.member" &&
             event.state_key == bridge.getBot().getUserId()) {
-          console.log('matrix member event for myself');
+          var membership = event.content.membership;
+          if (membership == "invite") {
+            onBotInvited(event.room_id);
+          }
+          else if (membership == "join") {
+            onBotJoined(event.room_id);
+          }
+          else if (membership == "leave") {
+            // TODO: "leave" events might mean we left the room, or got kicked
+            //   while still in invite state - i.e. invite was cancelled
+            //   before we joined.
+            onBotLeft(event.room_id);
+          }
+          else {
+            console.log('matrix member event for myself to state ' + membership + 
+                        ' from state ', event);
+          }
           return;
         }
 
@@ -53,6 +69,16 @@ function runBridge(port, config) {
     }
   });
   console.log("Matrix-side listening on port %s", port);
+
+  function onBotInvited(room_id) {
+    bridge.getIntent().join(room_id);
+  }
+
+  function onBotJoined(room_id) {
+  }
+
+  function onBotLeft(room_id) {
+  }
 
   // We have to find out our own gitter user ID so we can ignore reflections of
   // messages we sent
