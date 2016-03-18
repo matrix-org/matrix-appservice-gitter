@@ -16,6 +16,8 @@ var BridgedRoom = require("./lib/BridgedRoom");
 function runBridge(port, config) {
   var gitter = new Gitter(config.gitter_api_key);
 
+  var bridgedRoomsByMatrixId = {};
+
   var bridge = new Bridge({
     homeserverUrl: config.matrix_homeserver,
     domain: config.matrix_user_domain,
@@ -67,12 +69,9 @@ function runBridge(port, config) {
           handled = true;
         }
 
-        var roomConfig = config.rooms.find(function (r) {
-          return r.matrix_room_id == event.room_id
-        })
-
-        if (roomConfig) {
-          relayToMatrix(roomConfig, event);
+        var bridgedRoom = bridgedRoomsByMatrixId[event.room_id];
+        if (bridgedRoom) {
+          bridgedRoom.onMatrixMessage(event);
           handled = true;
         }
 
@@ -92,17 +91,14 @@ function runBridge(port, config) {
     function onNewGitterRoom(roomConfig) {
       var roomName = roomConfig.gitter_room;
 
-      var bridgedRoom = new BridgedRoom(bridge, config,
-          new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomName)
-      );
-
-      // TODO: store the bridgedRoom somewhere
-
       gitter.rooms.join(roomName).then(function (room) {
-        var events = room.streaming().chatMessages();
+        var bridgedRoom = new BridgedRoom(bridge, config,
+            new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomName), room
+        );
 
-        // TODO(paul): Terrible hack to make the other join path work
-        roomConfig.gitterRoomId = room.id;
+        bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
+
+        var events = room.streaming().chatMessages();
 
         events.on('chatMessages', function(message) {
           if (message.operation !== 'create' ||
@@ -204,16 +200,6 @@ function runBridge(port, config) {
     else {
       respond("Unrecognised command: " + cmd);
     }
-  }
-
-  function relayToMatrix(roomConfig, event) {
-    // gitter supports Markdown. We'll use that to apply a little formatting
-    // to make understanding the text a little easier
-    var text = '*<' + event.user_id + '>*: ' + event.content.body
-
-    gitter.rooms.find(roomConfig.gitterRoomId).then(function (room) {
-      room.send(text);
-    });
   }
 
   bridge.run(port, config);
