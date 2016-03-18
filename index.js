@@ -45,6 +45,10 @@ function runBridge(port, config) {
           return;
         }
 
+        if (event.sender == bridge.getBot().getUserId()) {
+          return;
+        }
+
         console.log('matrix->' + event.room_id + ' from ' + event.user_id + ':', event.content.body)
 
         var handled = false;
