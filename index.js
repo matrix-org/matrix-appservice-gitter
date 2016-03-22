@@ -92,7 +92,7 @@ function runBridge(port, config) {
       var roomName = roomConfig.gitter_room;
 
       gitter.rooms.join(roomName).then(function (room) {
-        var bridgedRoom = new BridgedRoom(bridge, config,
+        var bridgedRoom = new BridgedRoom(bridge,
             new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomName), room
         );
 
