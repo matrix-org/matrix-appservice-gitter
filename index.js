@@ -83,17 +83,21 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  function onNewGitterRoom(roomConfig) {
-    var bridgedRoom = new BridgedRoom(bridge, gitter,
-        new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomConfig.gitter_room)
-    );
+  bridge.loadDatabases().then(function () {
+    return bridge.getRoomStore().getLinksByData({});
+  }).then(function (links) {
+    links.forEach(function (link) {
+      var bridgedRoom = new BridgedRoom(bridge, gitter,
+          new MatrixRoom(link.matrix), new GitterRoom(link.remote)
+      );
 
-    bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
+      bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
-    bridgedRoom.joinAndStart();
-  }
-
-  config.rooms.forEach(onNewGitterRoom);
+      bridgedRoom.joinAndStart().then(function () {
+        console.log("LINKED " + bridgedRoom.matrixRoomId() + " to " + bridgedRoom.gitterRoomName());
+      });
+    });
+  });
 
   function onBotInvited(room_id) {
     bridge.getIntent().join(room_id);
