@@ -83,41 +83,17 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  // We have to find out our own gitter user ID so we can ignore reflections of
-  // messages we sent
-  gitter.currentUser().then(function (u) {
-    var gitterUserId = u.id;
+  function onNewGitterRoom(roomConfig) {
+    var bridgedRoom = new BridgedRoom(bridge, gitter,
+        new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomConfig.gitter_room)
+    );
 
-    function onNewGitterRoom(roomConfig) {
-      var roomName = roomConfig.gitter_room;
+    bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
-      gitter.rooms.join(roomName).then(function (room) {
-        var bridgedRoom = new BridgedRoom(bridge,
-            new MatrixRoom(roomConfig.matrix_room_id), new GitterRoom(roomName), room
-        );
+    bridgedRoom.joinAndStart();
+  }
 
-        bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
-
-        var events = room.streaming().chatMessages();
-
-        events.on('chatMessages', function(message) {
-          if (message.operation !== 'create' ||
-              !message.model.fromUser) {
-            return;
-          }
-
-          if(message.model.fromUser.id == gitterUserId) {
-            // Ignore a reflection of my own messages
-            return;
-          }
-
-          bridgedRoom.onGitterMessage(message);
-        });
-      });
-    }
-
-    config.rooms.forEach(onNewGitterRoom);
-  });
+  config.rooms.forEach(onNewGitterRoom);
 
   function onBotInvited(room_id) {
     bridge.getIntent().join(room_id);
