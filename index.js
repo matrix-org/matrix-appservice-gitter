@@ -87,7 +87,7 @@ function runBridge(port, config) {
     return bridge.getRoomStore().getLinksByData({});
   }).then(function (links) {
     links.forEach(function (link) {
-      var bridgedRoom = new BridgedRoom(bridge, gitter,
+      var bridgedRoom = new BridgedRoom(bridge, config, gitter,
           new MatrixRoom(link.matrix), new GitterRoom(link.remote)
       );
 
@@ -147,7 +147,7 @@ function runBridge(port, config) {
         var gitterRoom = new GitterRoom(gitterName);
 
         return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(function () {
-          var bridgedRoom = new BridgedRoom(bridge, gitter, matrixRoom, gitterRoom);
+          var bridgedRoom = new BridgedRoom(bridge, config, gitter, matrixRoom, gitterRoom);
           bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
           return bridgedRoom.joinAndStart();
