@@ -147,8 +147,13 @@ function runBridge(port, config) {
         var gitterRoom = new GitterRoom(gitterName);
 
         return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(function () {
+          var bridgedRoom = new BridgedRoom(bridge, gitter, matrixRoom, gitterRoom);
+          bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
+
+          return bridgedRoom.joinAndStart();
+        }).then(function () {
+          console.log("LINKED " + matrixRoom.id + " to " + gitterRoom.id);
           respond("Linked");
-          // TODO: start the room bridging
         });
       });
     }
