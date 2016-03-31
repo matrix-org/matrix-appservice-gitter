@@ -171,14 +171,26 @@ function runBridge(port, config) {
       }
 
       linkPromise.then(function (links) {
-        if (!links.length) {
+        console.log("Found links", links);
+
+        if (!links.length || !links[0] || !links[0].matrix || !links[0].remote) {
           return respond("Cannot unlink - not known");
         }
 
         var link = links[0];
+
+        var matrixId = link.matrix;
+        var gitterId = link.remote;
+
         return store.unlinkRoomIds(link.matrix, link.remote).then(function () {
+          var bridgedRoom = bridgedRoomsByMatrixId[matrixId];
+          if (bridgedRoom) {
+            delete bridgedRoomsByMatrixId[matrixId];
+            return bridgedRoom.stopAndLeave();
+          }
+        }).then(function () {
+          console.log("UNLINKED " + matrixId + " to " + gitterId);
           respond("Unlinked");
-          // TODO: stop the room bridging
         });
       })
     }
