@@ -6,8 +6,9 @@
   "dependencies": {
     "bluebird": "^3.1.1",
     "matrix-appservice-bridge": "^0.3.2",
-    "matrix-js-sdk": "^0.2.1",
-    "node-gitter": "^1.2"
+    "matrix-js-sdk": "^0.5",
+    "node-gitter": "^1.2",
+    "request-promise": "^3"
   },
   "devDependencies": {},
   "scripts": {
