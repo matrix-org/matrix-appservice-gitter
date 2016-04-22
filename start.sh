@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FOREVER="forever start"
+FOREVER="forever --uid gitteras --append start"
 
 if [ "$1" = "-n" ]; then
     FOREVER="nodejs"
