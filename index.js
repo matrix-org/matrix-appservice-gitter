@@ -83,17 +83,17 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  bridge.loadDatabases().then(function () {
+  bridge.loadDatabases().then(() => {
     return bridge.getRoomStore().getLinksByData({});
-  }).then(function (links) {
-    links.forEach(function (link) {
+  }).then((links) => {
+    links.forEach((link) => {
       var bridgedRoom = new BridgedRoom(bridge, config, gitter,
           new MatrixRoom(link.matrix), new GitterRoom(link.remote)
       );
 
       bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
-      bridgedRoom.joinAndStart().then(function () {
+      bridgedRoom.joinAndStart().then(() => {
         console.log("LINKED " + bridgedRoom.matrixRoomId() + " to " + bridgedRoom.gitterRoomName());
       });
     });
@@ -132,7 +132,7 @@ function runBridge(port, config) {
       Promise.all([
         store.getRemoteLinks(matrixId),
         store.getMatrixLinks(gitterName)
-      ]).then(function (result) {
+      ]).then((result) => {
         var remoteLinks = result[0];
         var matrixLinks = result[1];
 
@@ -146,12 +146,12 @@ function runBridge(port, config) {
         var matrixRoom = new MatrixRoom(matrixId);
         var gitterRoom = new GitterRoom(gitterName);
 
-        return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(function () {
+        return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(() => {
           var bridgedRoom = new BridgedRoom(bridge, config, gitter, matrixRoom, gitterRoom);
           bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
           return bridgedRoom.joinAndStart();
-        }).then(function () {
+        }).then(() => {
           console.log("LINKED " + matrixRoom.id + " to " + gitterRoom.id);
           respond("Linked");
         });
@@ -170,7 +170,7 @@ function runBridge(port, config) {
         linkPromise = store.getMatrixLinks(id);
       }
 
-      linkPromise.then(function (links) {
+      linkPromise.then((links) => {
         console.log("Found links", links);
 
         if (!links.length || !links[0] || !links[0].matrix || !links[0].remote) {
@@ -182,13 +182,13 @@ function runBridge(port, config) {
         var matrixId = link.matrix;
         var gitterId = link.remote;
 
-        return store.unlinkRoomIds(link.matrix, link.remote).then(function () {
+        return store.unlinkRoomIds(link.matrix, link.remote).then(() => {
           var bridgedRoom = bridgedRoomsByMatrixId[matrixId];
           if (bridgedRoom) {
             delete bridgedRoomsByMatrixId[matrixId];
             return bridgedRoom.stopAndLeave();
           }
-        }).then(function () {
+        }).then(() => {
           console.log("UNLINKED " + matrixId + " to " + gitterId);
           respond("Unlinked");
         });
