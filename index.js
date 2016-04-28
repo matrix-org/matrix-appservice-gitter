@@ -13,8 +13,37 @@ var GitterRoom = require("matrix-appservice-bridge").RemoteRoom;
 
 var BridgedRoom = require("./lib/BridgedRoom");
 
-function MatrixGitterBridge(bridge) {
+function MatrixGitterBridge(bridge, config) {
   this._bridge = bridge;
+
+  var rules = [];
+  if (config.name_mangling) {
+    for (var i = 0; i < config.name_mangling.length; i++) {
+      var rule = config.name_mangling[i];
+
+      rules.push({
+        pattern: new RegExp(rule.pattern),
+        template: rule.template
+      });
+    }
+  }
+  this._name_mangling_rules = rules;
+}
+
+MatrixGitterBridge.prototype.mangleName = function(name) {
+  var rules = this._name_mangling_rules;
+
+  for (var i = 0; i < rules.length; i++) {
+    var rule = rules[i];
+    var matches = rule.pattern.exec(name);
+    if (!matches)
+      continue;
+
+    // TODO: more groups?
+    return rule.template.replace('$1', matches[1]);
+  }
+
+  return name;
 }
 
 MatrixGitterBridge.prototype.getIntentFromLocalpart = function(localpart) {
@@ -99,13 +128,13 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  var mgbridge = new MatrixGitterBridge(bridge);
+  var mgbridge = new MatrixGitterBridge(bridge, config);
 
   bridge.loadDatabases().then(() => {
     return bridge.getRoomStore().getLinksByData({});
   }).then((links) => {
     links.forEach((link) => {
-      var bridgedRoom = new BridgedRoom(mgbridge, config, gitter,
+      var bridgedRoom = new BridgedRoom(mgbridge, gitter,
           new MatrixRoom(link.matrix), new GitterRoom(link.remote)
       );
 
@@ -165,7 +194,7 @@ function runBridge(port, config) {
         var gitterRoom = new GitterRoom(gitterName);
 
         return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(() => {
-          var bridgedRoom = new BridgedRoom(bridge, config, gitter, matrixRoom, gitterRoom);
+          var bridgedRoom = new BridgedRoom(bridge, gitter, matrixRoom, gitterRoom);
           bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
           return bridgedRoom.joinAndStart();
