@@ -21,8 +21,12 @@ MatrixGitterBridge.prototype.getIntentFromLocalpart = function(localpart) {
   return this._bridge.getIntentFromLocalpart(localpart);
 };
 
-MatrixGitterBridge.prototype.getUserStore = function() {
-  return this._bridge.getUserStore();
+MatrixGitterBridge.prototype.getRemoteUser = function(id) {
+  return this._bridge.getUserStore().getRemoteUser(id);
+};
+
+MatrixGitterBridge.prototype.putRemoteUser = function(user) {
+  return this._bridge.getUserStore().setRemoteUser(user);
 };
 
 function runBridge(port, config) {
