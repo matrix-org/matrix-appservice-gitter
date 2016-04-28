@@ -13,6 +13,18 @@ var GitterRoom = require("matrix-appservice-bridge").RemoteRoom;
 
 var BridgedRoom = require("./lib/BridgedRoom");
 
+function MatrixGitterBridge(bridge) {
+  this._bridge = bridge;
+}
+
+MatrixGitterBridge.prototype.getIntentFromLocalpart = function(localpart) {
+  return this._bridge.getIntentFromLocalpart(localpart);
+};
+
+MatrixGitterBridge.prototype.getUserStore = function() {
+  return this._bridge.getUserStore();
+};
+
 function runBridge(port, config) {
   var gitter = new Gitter(config.gitter_api_key);
 
@@ -83,11 +95,13 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
+  var mgbridge = new MatrixGitterBridge(bridge);
+
   bridge.loadDatabases().then(() => {
     return bridge.getRoomStore().getLinksByData({});
   }).then((links) => {
     links.forEach((link) => {
-      var bridgedRoom = new BridgedRoom(bridge, config, gitter,
+      var bridgedRoom = new BridgedRoom(mgbridge, config, gitter,
           new MatrixRoom(link.matrix), new GitterRoom(link.remote)
       );
 
