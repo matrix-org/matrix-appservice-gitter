@@ -13,8 +13,10 @@ var GitterRoom = require("matrix-appservice-bridge").RemoteRoom;
 
 var BridgedRoom = require("./lib/BridgedRoom");
 
-function MatrixGitterBridge(bridge, config) {
+function MatrixGitterBridge(bridge, gitter, config) {
   this._bridge = bridge;
+  this._gitter = gitter;
+  this._gitterUserId = null;
 
   var rules = [];
   if (config.name_mangling) {
@@ -29,6 +31,16 @@ function MatrixGitterBridge(bridge, config) {
   }
   this._name_mangling_rules = rules;
 }
+
+MatrixGitterBridge.prototype.getGitterUserId = function() {
+  if (this._gitterUserId)
+    return Promise.resolve(this._gitterUserId);
+
+  return this._gitter.currentUser().then((u) => {
+    this._gitterUserId = u.id;
+    return u.id;
+  });
+};
 
 MatrixGitterBridge.prototype.mangleName = function(name) {
   var rules = this._name_mangling_rules;
@@ -128,7 +140,7 @@ function runBridge(port, config) {
   });
   console.log("Matrix-side listening on port %s", port);
 
-  var mgbridge = new MatrixGitterBridge(bridge, config);
+  var mgbridge = new MatrixGitterBridge(bridge, gitter, config);
 
   bridge.loadDatabases().then(() => {
     return bridge.getRoomStore().getLinksByData({});
@@ -140,7 +152,7 @@ function runBridge(port, config) {
 
       bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
-      bridgedRoom.joinAndStart().then(() => {
+      return bridgedRoom.joinAndStart().then(() => {
         console.log("LINKED " + bridgedRoom.matrixRoomId() + " to " + bridgedRoom.gitterRoomName());
       });
     });
