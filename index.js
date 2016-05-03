@@ -1,6 +1,7 @@
 var Promise = require("bluebird");
 
 var Gitter = require('node-gitter');
+var GitterRealtimeClient = require('gitter-realtime-client');
 
 var Cli = require("matrix-appservice-bridge").Cli;
 var Bridge = require("matrix-appservice-bridge").Bridge;
@@ -16,6 +17,7 @@ var MatrixGitterBridge = require("./lib/MatrixGitterBridge");
 
 function runBridge(port, config) {
   var gitter = new Gitter(config.gitter_api_key);
+  var gitterRealtime = new GitterRealtimeClient.RealtimeClient({token: config.gitter_api_key});
 
   var bridgedRoomsByMatrixId = {};
 
@@ -90,7 +92,7 @@ function runBridge(port, config) {
     return bridge.getRoomStore().getLinksByData({});
   }).then((links) => {
     links.forEach((link) => {
-      var bridgedRoom = new BridgedRoom(mgbridge, gitter,
+      var bridgedRoom = new BridgedRoom(mgbridge, gitter, gitterRealtime,
           new MatrixRoom(link.matrix), new GitterRoom(link.remote)
       );
 
