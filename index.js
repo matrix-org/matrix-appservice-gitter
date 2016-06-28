@@ -152,7 +152,7 @@ function runBridge(port, config) {
         var gitterRoom = new GitterRoom(gitterName);
 
         return store.linkRooms(matrixRoom, gitterRoom, {}, matrixId+" "+gitterName).then(() => {
-          var bridgedRoom = new BridgedRoom(bridge, gitter, matrixRoom, gitterRoom);
+          var bridgedRoom = new BridgedRoom(mgbridge, gitter, matrixRoom, gitterRoom);
           bridgedRoomsByMatrixId[bridgedRoom.matrixRoomId()] = bridgedRoom;
 
           return bridgedRoom.joinAndStart();
