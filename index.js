@@ -1,15 +1,7 @@
-var Promise = require("bluebird");
-
 var Cli = require("matrix-appservice-bridge").Cli;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
 var MatrixGitterBridge = require("./lib/MatrixGitterBridge");
-
-function runBridge(port, config) {
-  console.log("Matrix-side listening on port %s", port);
-
-  (new MatrixGitterBridge(config)).run(port);
-}
 
 new Cli({
   registrationPath: "gitter-registration.yaml",
@@ -23,5 +15,8 @@ new Cli({
     reg.addRegexPattern("users", "@gitter_.*", true);
     callback(reg);
   },
-  run: runBridge
+  run: function(port, config) {
+    console.log("Matrix-side listening on port %s", port);
+    (new MatrixGitterBridge(config)).run(port);
+  },
 }).run();
