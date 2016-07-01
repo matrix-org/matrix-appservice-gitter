@@ -1,0 +1,20 @@
+type: object
+requires: ["gitter_api_key", "matrix_homeserver", "matrix_user_domain"]
+properties:
+  gitter_api_key:
+    type: string
+  matrix_homeserver:
+    type: string
+  matrix_user_domain:
+    type: string
+  matrix_admin_room:
+    type: string
+  name_mangling:
+    type: array
+    items:
+      type: object
+      properties:
+        pattern:
+          type: string
+        template:
+          type: string

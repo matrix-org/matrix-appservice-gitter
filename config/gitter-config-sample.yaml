@@ -1,0 +1,2 @@
+matrix_homeserver: "http://example.com:8008"
+matrix_user_domain: "example.com"
