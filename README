@@ -1,0 +1,62 @@
+Installation
+------------
+
+  $ git clone ...
+  $ cd matrix-appservice-gitter
+  $ npm install
+
+
+Setup
+-----
+
+1. Create a github user to act as the relay bot itself in gitter chanels.
+   Obtain the user's gitter API key by visiting
+     https://developer.gitter.im/apps
+
+2. Create a new Matrix room to act as the administration control room. Note
+   its internal room ID.
+
+2. Create `gitter-config.yaml`. This needs the following keys:
+
+    gitter_api_key: [the API key obtained in step 1]
+
+    matrix_homeserver: [http URL pointing at the homeserver]
+
+    matrix_user_domain: [domain part of the homeserver's name. Used for
+                         ghost username generation]
+
+    matrix_admin_room: [the ID of the room created in step 2]
+
+3. Pick/decide on a spare local TCP port number to run the application service
+   on. This needs to be visible to the homeserver if that runs on another
+   machine.
+
+4. Generate the appservice registration file:
+
+   $ node index.js --generate-registration --port $PORT
+
+5. Copy the newly-generated `gitter-registration.yaml` file to the homeserver
+   and restart it.
+
+6. Start the actual application service.
+
+   $ forever index.js --port $PORT
+
+7. Invite the newly-created '@gitterbot:DOMAIN' user into the admin control
+   room created at step 2.
+
+The bridge should now be running.
+
+
+Provisioning
+------------
+
+The bridge is controlled entirely by commands in the admin control room.
+
+  > LINK [matrix room ID] [gitter room name]
+  Creates a new link between the given matrix room ID and the gitter room name.
+  The relay user must be invited to the room on each side for this to become
+  functional.
+
+  > UNLINK [matrix room ID or gitter room name]
+  Disconnects the link associated with the given room.
