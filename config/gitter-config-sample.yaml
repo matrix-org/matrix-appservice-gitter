@@ -1,0 +1,15 @@
+# Obtain this key from
+#   https://developer.gitter.im/apps
+gitter_api_key: "0123456789ABCDEF"
+
+# The location of the homeserver this AS is configured for
+matrix_homeserver: "http://example.com:8008"
+
+# The domain for locally-created users
+matrix_user_domain: "example.com"
+
+# A list of rules to define how to generate `usernames` on the gitter side
+# of the relaybot for various patterns of matrix user ID
+name_mangling:
+  - pattern: "@irc_(.*):example.com"
+    template: "$1 (IRC)"
