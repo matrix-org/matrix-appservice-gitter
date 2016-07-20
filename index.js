@@ -13,6 +13,7 @@ new Cli({
         reg.setAppServiceToken(AppServiceRegistration.generateToken());
         reg.setSenderLocalpart("gitterbot");
         reg.addRegexPattern("users", "@gitter_.*", true);
+        reg.addRegexPattern("aliases", "#gitter_.*", true);
         reg.setId("gitter");
         callback(reg);
     },
