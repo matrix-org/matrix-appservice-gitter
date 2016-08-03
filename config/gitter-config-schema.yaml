@@ -1,11 +1,13 @@
 type: object
-requires: ["gitter_api_key", "matrix_homeserver", "matrix_user_domain"]
+requires: ["gitter_api_key", "matrix_homeserver", "matrix_user_domain", "username_template"]
 properties:
   gitter_api_key:
     type: string
   matrix_homeserver:
     type: string
   matrix_user_domain:
+    type: string
+  username_template:
     type: string
   matrix_admin_room:
     type: string

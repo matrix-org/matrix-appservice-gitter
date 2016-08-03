@@ -8,6 +8,10 @@ matrix_homeserver: "http://example.com:8008"
 # The domain for locally-created users
 matrix_user_domain: "example.com"
 
+# A template to use to generate locally-created usernames. This string must
+#   contain ${USER} somewhere inside it.
+username_template: "_gitter_${USER}"
+
 # A list of rules to define how to generate `usernames` on the gitter side
 # of the relaybot for various patterns of matrix user ID
 name_mangling:
