@@ -36,11 +36,10 @@ Setup
 
    $ node index.js --generate-registration -f gitter-registration.yaml  -u $URL:$PORT
 
-5. Copy the newly-generated `gitter-registration.yaml` file to the homeserver
-
+5. Copy the newly-generated `gitter-registration.yaml` file to the homeserver.
    Add the registration file to your homeserver config (default `homeserver.yaml`):
 
-   app_service_config_files: ["/path/to/gitter-registration.yaml"]
+    app_service_config_files: ["/path/to/gitter-registration.yaml"]
 
    Restart your homeserver.
 
