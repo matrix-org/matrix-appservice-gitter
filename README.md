@@ -15,10 +15,12 @@ Setup
    Obtain the user's gitter API key by visiting
      https://developer.gitter.im/apps
 
-2. Create a new Matrix room to act as the administration control room. Note
+1. Create a new Matrix room to act as the administration control room. Note
    its internal room ID.
 
-2. Create `gitter-config.yaml`. This needs the following keys:
+1. Create a `gitter-config.yaml` file for global configuration. There is a
+   sample one to begin with in `config/gitter-config-sample.yaml` you may wish
+   to copy and edit as appropriate. This needs the following keys:
 
    ```yaml
    gitter_api_key: "the API key obtained in step 1"
@@ -33,30 +35,22 @@ Setup
    matrix_admin_room: "the ID of the room created in step 2"
    ```
 
-3. Pick/decide on a spare local TCP port number to run the application service
-   on. This needs to be visible to the homeserver if that runs on another
-   machine.
+1. Pick/decide on a spare local TCP port number to run the application service
+   on. This needs to be visible to the homeserver - take care to configure
+   firewalls correctly if that is on another machine to the bridge. The port
+   number will be noted as `$PORT` in the remaining instructions.
 
-4. Generate the appservice registration file (if the application service runs
+1. Generate the appservice registration file (if the application service runs
    on the same server you can use localhost as `$URL`):
 
    ```sh
    $ node index.js --generate-registration -f gitter-registration.yaml  -u $URL:$PORT
    ```
 
-5. Copy the newly-generated `gitter-registration.yaml` file to the homeserver.
-   Add the registration file to your homeserver config (default `homeserver.yaml`):
-
-   ```yaml
-   app_service_config_files: ["/path/to/gitter-registration.yaml"]
-   ```
-
-   Restart your homeserver.
-
-6. Start the actual application service. You can use forever
+1. Start the actual application service. You can use forever
 
    ```sh
-   $ forever index.js --config gitter-config.yaml --port $PORT
+   $ forever start index.js --config gitter-config.yaml --port $PORT
    ```
 
    or node
@@ -65,7 +59,21 @@ Setup
    $ node index.js --config gitter-config.yaml --port $PORT
    ```
 
-7. Invite the newly-created `@gitterbot:DOMAIN` user into the admin control
+1. Copy the newly-generated `gitter-registration.yaml` file to the homeserver.
+   Add the registration file to your homeserver config (default `homeserver.yaml`):
+
+   ```yaml
+   app_service_config_files:
+      - ...
+      - "/path/to/gitter-registration.yaml"
+   ```
+
+   Don't forget - it has to be a YAML list of strings, not just a single string.
+
+   Restart your homeserver to have it reread the config file and establish a
+   connection to the bridge.
+
+1. Invite the newly-created `@gitterbot:DOMAIN` user into the admin control
    room created at step 2.
 
 The bridge should now be running.
