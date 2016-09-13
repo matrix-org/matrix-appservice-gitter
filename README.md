@@ -129,7 +129,10 @@ within a given namespace.
    homeserver to have the new values applied.
 
 You should now be able to dynamically create new portal rooms by directly
-attempting to join room aliases matching this template.
+attempting to join room aliases matching this template. These rooms will
+behave similarly to administrator-provisioned link rooms, except that because
+the application service itself created the Matrix-side room, it retains full
+operator control of the room.
 
 For top-level gitter rooms like organisations, repositories and user rooms,
 you can simply embed the name in the alias. For example, the top-level gitter
@@ -142,3 +145,14 @@ you'll need to encode the ``/`` character as ``=2F``. For example, the
 ``my-org-here/chat`` room would be found at:
 
 > /join #gitter_my-org-here=2Fchat:localhost
+
+Alternatively, if you wish to be able to create these portals only from the
+admin console without letting all your users dynamically create their own, you
+can leave the ``aliases`` list empty in the registration file, so that the
+homeserver won't ask the application service to dynamically create them.
+Instead, you can provision them directly by using the admin control room.
+
+> mkportal [gitter room name]
+
+Will create a new portal room for the given gitter room name and print its
+alias. Once created, these rooms act the same as other dynamic portals.
