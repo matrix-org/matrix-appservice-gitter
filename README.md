@@ -82,7 +82,7 @@ The bridge should now be running.
 Provisioning
 ------------
 
-The bridge is controlled entirely by commands in the admin control room.
+The bridge is controlled by commands in the admin control room.
 
 > link [matrix room ID] [gitter room name]
 
@@ -95,3 +95,50 @@ user must be invited to the matrix room for this to become functional.
 
 Disconnects the link associated with the given room and leaves the
 associated gitter room
+
+
+Dynamic Portals
+---------------
+
+As well as the linked rooms created by administrator users on the console, it
+is also possible to enable "dynamic portals", a feature in which the bridge
+itself will lazily create linked rooms in response to alias lookup requests
+within a given namespace.
+
+1. Set the following extra configuration values in the main
+   `gitter-config.yaml` file:
+
+   ```yaml
+   enable_portals: true
+
+   alias_template: "template for room aliases, e.g. gitter_${ROOM}"
+   ```
+
+1. Ensure that the appservice registration file requests an alias regexp
+   pattern that will match the alias template form, e.g.:
+
+   ```yaml
+   ...
+   namespaces:
+     aliases:
+       - exclusive: true
+         regex: '#gitter_.*'
+   ```
+
+   If you've edited the registration file, don't forget to restart the
+   homeserver to have the new values applied.
+
+You should now be able to dynamically create new portal rooms by directly
+attempting to join room aliases matching this template.
+
+For top-level gitter rooms like organisations, repositories and user rooms,
+you can simply embed the name in the alias. For example, the top-level gitter
+chat room relating to ``my-org-here`` would be found at:
+
+> /join #gitter_my-org-here:localhost
+
+To join a channel nested withn an organisation, repository or user account,
+you'll need to encode the ``/`` character as ``=2F``. For example, the
+``my-org-here/chat`` room would be found at:
+
+> /join #gitter_my-org-here=2Fchat:localhost
