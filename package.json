@@ -10,7 +10,8 @@
     "matrix-js-sdk": "^0.5",
     "minimist": "^1.2",
     "node-gitter": "^1.2",
-    "request-promise": "^3"
+    "request-promise": "^3",
+    "node-statsd": "^0.1"
   },
   "devDependencies": {},
   "scripts": {
