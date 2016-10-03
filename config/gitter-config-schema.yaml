@@ -22,5 +22,7 @@ properties:
           type: string
         template:
           type: string
+  enable_read_receipts:
+    type: boolean
   enable_metrics:
     type: boolean
