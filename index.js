@@ -1,7 +1,7 @@
 var Cli = require("matrix-appservice-bridge").Cli;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 
-var MatrixGitterBridge = require("./lib/MatrixGitterBridge");
+var Main = require("./lib/Main");
 
 new Cli({
     registrationPath: "gitter-registration.yaml",
@@ -19,6 +19,6 @@ new Cli({
     },
     run: function(port, config) {
         console.log("Matrix-side listening on port %s", port);
-        (new MatrixGitterBridge(config)).run(port);
+        (new Main(config)).run(port);
     },
 }).run();
