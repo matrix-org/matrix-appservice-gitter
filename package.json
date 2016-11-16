@@ -9,7 +9,7 @@
     "matrix-appservice-bridge": "matrix-org/matrix-appservice-bridge#0219cee95f6a6984b8c0aa78acace57cbe7d4e8b",
     "matrix-js-sdk": "^0.5",
     "minimist": "^1.2",
-    "node-gitter": "^1.2",
+    "node-gitter": "^2.0",
     "request-promise": "^3"
   },
   "devDependencies": {},
