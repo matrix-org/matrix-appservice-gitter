@@ -6,7 +6,7 @@
   "dependencies": {
     "bluebird": "^3.1.1",
     "gitter-realtime-client": "^1",
-    "matrix-appservice-bridge": "matrix-org/matrix-appservice-bridge#0219cee95f6a6984b8c0aa78acace57cbe7d4e8b",
+    "matrix-appservice-bridge": "^1.3.3",
     "matrix-js-sdk": "^0.5",
     "minimist": "^1.2",
     "node-gitter": "^2.0",
