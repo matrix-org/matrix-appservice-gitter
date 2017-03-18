@@ -17,8 +17,8 @@ new Cli({
         reg.setId("gitter");
         callback(reg);
     },
-    run: function(port, config) {
+    run: function(port, config, reg) {
         console.log("Matrix-side listening on port %s", port);
-        (new Main(config)).run(port);
+        (new Main(config, reg)).run(port);
     },
 }).run();
