@@ -32,8 +32,9 @@ properties:
           type: "string"
           enum: ["error","warn","info","debug"]
       files:
-          type: "object"
-          patternProperties:
-            ".*":
-              type: "string"
-              enum: ["error","warn","info","debug"]
+          type: "array"
+          items:
+              - type: "object"
+                additionalProperties:
+                    - type: "string"
+                      enum: ["error","warn","info","debug"]
