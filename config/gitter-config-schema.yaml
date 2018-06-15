@@ -30,7 +30,7 @@ properties:
     properties:
       console:
           type: "string"
-          enum: ["error","warn","info","debug"]
+          enum: ["error","warn","info","debug","off"]
       files:
           type: "array"
           items:
