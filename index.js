@@ -23,6 +23,8 @@ new Cli({
         log.info("Matrix-side listening on port %s", port);
         if (config.logging) {
             ConfigureLogging(config.logging);
+        } else {
+            ConfigureLogging({console:"debug"});
         }
         (new Main(config)).run(port);
     },
