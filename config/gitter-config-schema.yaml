@@ -38,3 +38,5 @@ properties:
                 additionalProperties:
                     - type: "string"
                       enum: ["error","warn","info","debug"]
+  enable_presence:
+    type: boolean
