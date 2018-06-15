@@ -26,8 +26,14 @@ properties:
     type: boolean
   enable_metrics:
     type: boolean
-  config:
+  logging:
     properties:
       console:
           type: "string"
           enum: ["error","warn","info","debug"]
+      files:
+          type: "object"
+          patternProperties:
+            ".*":
+              type: "string"
+              enum: ["error","warn","info","debug"]
