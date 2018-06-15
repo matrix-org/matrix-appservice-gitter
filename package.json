@@ -10,7 +10,9 @@
     "matrix-js-sdk": "^0.7.2",
     "minimist": "^1.2",
     "node-gitter": "^2.0",
-    "request-promise": "^3"
+    "request-promise": "^3",
+    "winston": "2.4.2",
+    "winston-daily-rotate-file": "^3.2.1"
   },
   "devDependencies": {},
   "scripts": {

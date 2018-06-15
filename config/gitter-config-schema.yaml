@@ -26,5 +26,17 @@ properties:
     type: boolean
   enable_metrics:
     type: boolean
+  logging:
+    properties:
+      console:
+          type: "string"
+          enum: ["error","warn","info","debug","off"]
+      files:
+          type: "array"
+          items:
+              - type: "object"
+                additionalProperties:
+                    - type: "string"
+                      enum: ["error","warn","info","debug"]
   enable_presence:
     type: boolean
