@@ -17,3 +17,9 @@ username_template: "_gitter_${USER}"
 name_mangling:
   - pattern: "@irc_(.*):example.com"
     template: "$1 (IRC)"
+
+config:
+    console: "debug"
+    files:
+        -   "debug.log": "debug"
+    maxFiles: 1

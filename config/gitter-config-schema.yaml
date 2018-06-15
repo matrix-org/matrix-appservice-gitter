@@ -26,3 +26,8 @@ properties:
     type: boolean
   enable_metrics:
     type: boolean
+  config:
+    properties:
+      console:
+          type: "string"
+          enum: ["error","warn","info","debug"]
