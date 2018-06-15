@@ -18,7 +18,7 @@ name_mangling:
   - pattern: "@irc_(.*):example.com"
     template: "$1 (IRC)"
 
-config:
+logging:
     console: "debug"
     files:
         -   "debug.log": "debug"
