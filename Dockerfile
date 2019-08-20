@@ -11,5 +11,4 @@ RUN npm install --only=production
 EXPOSE 9898
 EXPOSE 5858
 
-ENTRYPOINT [ "node", "app.js", "-c", "/config/config.yaml" ]
-CMD [ "-p", "5858", "-f", "/config/gitter-registration.yaml" ]
+CMD [ "node", "index.js", "-c", "/config/config.yaml", "-p", "5858", "-f", "/config/gitter-registration.yaml" ]
