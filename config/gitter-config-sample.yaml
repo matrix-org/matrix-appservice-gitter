@@ -8,6 +8,9 @@ matrix_homeserver: "http://example.com:8008"
 # The domain for locally-created users
 matrix_user_domain: "example.com"
 
+# The storage location for data files. This should be something like /data for docker.
+# data_dir: "."
+
 # A template to use to generate locally-created usernames. This string must
 #   contain ${USER} somewhere inside it.
 username_template: "_gitter_${USER}"
