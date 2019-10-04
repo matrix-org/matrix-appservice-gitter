@@ -4,6 +4,8 @@ gitter_api_key: "0123456789ABCDEF"
 
 # The location of the homeserver this AS is configured for
 matrix_homeserver: "http://example.com:8008"
+# External url for media 
+matrix_external_url: "https://matrix.org"
 
 # The domain for locally-created users
 matrix_user_domain: "example.com"

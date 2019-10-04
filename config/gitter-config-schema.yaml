@@ -5,6 +5,8 @@ properties:
     type: string
   matrix_homeserver:
     type: string
+  matrix_external_url:
+    type: string
   matrix_user_domain:
     type: string
   username_template:
