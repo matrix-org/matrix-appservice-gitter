@@ -30,6 +30,10 @@ properties:
     type: boolean
   enable_metrics:
     type: boolean
+  enable_portals:
+    type: boolean
+  alias_template:
+    type: string
   logging:
     properties:
       console:
