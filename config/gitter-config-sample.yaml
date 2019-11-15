@@ -29,6 +29,5 @@ logging:
         -   "debug.log": "debug"
     maxFiles: 1
 
-
-enable_portals: true
+enable_portals: false
 alias_template: "gitter_${ROOM}"
