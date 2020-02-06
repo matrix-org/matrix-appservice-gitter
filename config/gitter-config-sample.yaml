@@ -28,3 +28,6 @@ logging:
     files:
         -   "debug.log": "debug"
     maxFiles: 1
+
+enable_portals: false
+alias_template: "gitter_${ROOM}"
