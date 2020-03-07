@@ -1,4 +1,4 @@
-FROM node:current-alpine
+FROM node:13-alpine
 
 VOLUME /data/ /config/
 
