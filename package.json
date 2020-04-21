@@ -22,8 +22,8 @@
     "type": "git",
     "url": "https://github.com/matrix-org/matrix-appservice-gitter.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Matrix.org",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/matrix-org/matrix-appservice-gitter/issues"
   }
