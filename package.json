@@ -4,7 +4,7 @@
   "description": "Matrix<->Gitter Bridge Application Service",
   "main": "index.js",
   "dependencies": {
-    "bluebird": "^3.1.1",
+    "bluebird": "^3.5.30",
     "gitter-realtime-client": "^2.1.0",
     "matrix-appservice-bridge": "^1.12.2",
     "matrix-js-sdk": "^0.7.2",
@@ -15,6 +15,8 @@
     "winston-daily-rotate-file": "^3.2.1"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.30",
+    "@types/node": "^12",
     "typescript": "^3.8.3"
   "scripts": {
     "build": "tsc --project tsconfig.json",
