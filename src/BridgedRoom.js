@@ -5,7 +5,7 @@ var Promise = require("bluebird");
 /* Slightly evil, but gitter doesn't export this rather useful class */
 const GitterRoom = require('node-gitter/lib/rooms.js');
 
-var retry = require("./retry");
+const { retry, RetryError } = require("./retry");
 const log = require("./Logging.js").Get("BridgedRoom");
 
 // How often to clean up stale sent message IDs
@@ -153,7 +153,7 @@ BridgedRoom.prototype.joinAndStart = function() {
 
             // Turn 429 or any 5xx into RetryError
             if ((code == "429") || (code.match(/^5/))) {
-                throw new retry.RetryError(e.message);
+                throw new RetryError(e.message);
             }
 
             throw e;

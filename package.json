@@ -14,9 +14,10 @@
     "winston": "2.4.2",
     "winston-daily-rotate-file": "^3.2.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript": "^3.8.3"
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --project tsconfig.json",
   },
   "repository": {
     "type": "git",
