@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
+    "prepare": "npm run build",
     "lint": "npm run lint:js && npm run lint:ts",
     "lint:js": "eslint -c .eslintrc.json src/**/*.js",
     "lint:ts": "eslint -c .eslintrcts.json --max-warnings 0 src/**/*.ts"
