@@ -4,7 +4,7 @@
   "description": "Matrix<->Gitter Bridge Application Service",
   "main": "index.js",
   "dependencies": {
-    "bluebird": "^3.1.1",
+    "bluebird": "^3.5.30",
     "gitter-realtime-client": "^2.1.0",
     "matrix-appservice-bridge": "^1.12.2",
     "matrix-js-sdk": "^0.7.2",
@@ -14,9 +14,20 @@
     "winston": "2.4.2",
     "winston-daily-rotate-file": "^3.2.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bluebird": "^3.5.30",
+    "@types/node": "^12",
+    "@typescript-eslint/eslint-plugin": "^2.31.0",
+    "@typescript-eslint/parser": "^2.31.0",
+    "eslint": "^6.8.0",
+    "typescript": "^3.8.3"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --project tsconfig.json",
+    "prepare": "npm run build",
+    "lint": "npm run lint:js && npm run lint:ts",
+    "lint:js": "eslint -c .eslintrc.json src/**/*.js",
+    "lint:ts": "eslint -c .eslintrcts.json --max-warnings 0 src/**/*.ts"
   },
   "repository": {
     "type": "git",

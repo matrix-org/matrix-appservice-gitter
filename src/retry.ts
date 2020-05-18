@@ -1,18 +1,26 @@
-"use strict";
+import * as logging from "./Logging";
+import Bluebird from "bluebird";
 
-var Promise = require("bluebird");
-const log = require("./Logging.js").Get("retry");
+const log = logging.Get("retry");
+
+
+export class RetryError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "RetryError";
+    }
+}
 
 /*
  * Repeatedly calls 'code()' until it does not fail with a RetryError.
  * When it succeeds, or fails with a different kind of error, or when we run
  * out of attempt counts, its result or failure is returned.
  */
-function retry(code) {
+export function retry<T>(code: () => Promise<T>) {
     var attempts = 10;
     var delay = 200; // msec
 
-    function again() {
+    const again: () => Promise<T> = () => {
         return code().catch((e) => {
             attempts--;
             if (!attempts || !(e instanceof RetryError)) {
@@ -28,22 +36,10 @@ function retry(code) {
             delay *= 2;
 
             log.warn("Failed:", e.message, "retrying after "+thisDelay+"msec");
-            return Promise.delay(thisDelay).then(
+            return Bluebird.delay(thisDelay).then(
                 () => again()
             );
         });
     }
     return again();
 }
-
-function RetryError(message) {
-    this.name = "RetryError";
-    this.message = message || "Retryable Error";
-    this.stack = (new Error()).stack;
-}
-RetryError.prototype = Object.create(Error.prototype);
-RetryError.prototype.constructor = RetryError;
-
-retry.RetryError = RetryError;
-
-module.exports = retry;
