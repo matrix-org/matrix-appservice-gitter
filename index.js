@@ -3,11 +3,12 @@ const AppServiceRegistration = require("matrix-appservice-bridge").AppServiceReg
 const Main = require("./lib/Main");
 const ConfigureLogging = require("./lib/Logging.js").Configure;
 const log = require("./lib/Logging.js").Get("index.js");
+const path = require("path");
 
 new Cli({
     registrationPath: "gitter-registration.yaml",
     bridgeConfig: {
-        schema: "config/gitter-config-schema.yaml",
+        schema: path.join(__dirname, "config/gitter-config-schema.yaml"),
     },
     generateRegistration: function(reg, callback) {
         reg.setHomeserverToken(AppServiceRegistration.generateToken());
