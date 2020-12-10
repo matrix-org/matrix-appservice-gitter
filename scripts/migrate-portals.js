@@ -50,14 +50,14 @@ async function migrateRoom({gitterRoomId, oldMatrixRoomId, alias}) {
         if (ex.body && ex.body.errcode === 'M_NOT_FOUND') {
             console.log(`${gitterRoomId} -> does not exist anymore. Not bridging`);
             return;
-        }
-        if (ex.body && ex.body.errcode === 'M_LIMIT_EXCEEDED') {
+        } else if (ex.body && ex.body.errcode === 'M_LIMIT_EXCEEDED') {
             console.log(`${gitterRoomId} -> rate limit`);
             await new Promise((r) => setTimeout(r, ex.body.retry_after_ms + 100));
             targetRoomId = await client.joinRoom(alias);
             return;
+        } else {
+            throw ex;
         }
-        throw ex;
     }
     console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
     if (!targetRoomId) {
