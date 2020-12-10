@@ -43,6 +43,7 @@ async function getNewRoomId(alias) {
                 joined: false,
             };
         }
+        console.log("Joining new gitter room...");
         await new Promise((r) => setTimeout(r, 5000)); // Joins cost more in rate limits
         return {
             targetRoomId: await client.joinRoom(alias),
@@ -67,12 +68,14 @@ rl.on('close', async () => {
             console.log(`No target room for ${gitterRoomId}!`);
         }
         if (!dryRun) {
+            console.log("Add tombstone...");
             await client.sendStateEvent(gitterRoomId, 'm.room.tombstone', '', {
                 body: `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`,
                 replacement_room: targetRoomId,
             });
+            console.log("Sending power level update");
             // Disallow people from talking, should provide incentive to join the new room
-            await client.sendStateEvent(gitterRoomId, 'm.power_levels.tombstone', '', {
+            await client.sendStateEvent(gitterRoomId, 'm.room.power_levels', '', {
                 "ban": 50,
                 "events": {
                     "m.room.avatar": 50,
@@ -92,8 +95,9 @@ rl.on('close', async () => {
                 "users_default": 0            
             });
             if (joined) {
+                console.log("Parting joined room");
                 await client.leaveRoom(targetRoomId);
-            }    
+            }
         }
         await fs.promises.writeFile('checkpoint.txt', `${index}`, 'utf-8');
         index++;
