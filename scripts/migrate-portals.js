@@ -52,7 +52,15 @@ rl.on('close', async () => {
             continue;
         }
         console.log("Joining new room...");
-        const targetRoomId = await client.joinRoom(alias);
+        let targetRoomId;
+        try {
+            targetRoomId = await client.joinRoom(alias);
+        } catch (ex) {
+            if (ex.body && ex.body.errcode === 'M_NOT_FOUND') {
+                console.log(`${gitterRoomId} -> does not exist anymore. Not bridging`);
+                continue;
+            }
+        }
         console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
         if (!targetRoomId) {
             console.log(`No target room for ${gitterRoomId}!`);
