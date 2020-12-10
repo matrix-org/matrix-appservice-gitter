@@ -45,47 +45,36 @@ rl.on('close', async () => {
     console.log(`Starting from index ${index}`);
     for (const {gitterRoomId, oldMatrixRoomId, alias} of portalRooms.slice(index)) {
         await new Promise((r) => setTimeout(r, 3000));
-        const targetRoomId = await client.joinRoom(alias);
+        const powerLevels = await client.getRoomStateEvent(oldMatrixRoomId, 'm.room.power_levels', '');
+        if (powerLevels.users["@gitterbot:matrix.org"] !== 100) {
+            console.log(`${gitterRoomId} ${oldMatrixRoomId} PL for bot is not 100.`);
+            await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
+            continue;
+        }
+        console.log("Joining new room...");
+        const targetRoomId = await clientStoner.joinRoom(alias);
         console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
         if (!targetRoomId) {
             console.log(`No target room for ${gitterRoomId}!`);
         }
         if (!dryRun) {
-            console.log("Joining new room...");
-            await client.joinRoom(alias)
+            console.log("Sending power level update");
+            // Disallow people from talking, should provide incentive to join the new room
+            await client.sendStateEvent(oldMatrixRoomId, 'm.room.power_levels', '', {
+                ...powerLevels,
+                "events_default": 100,    
+            });
+            await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
             console.log("Add tombstone...");
             await client.sendStateEvent(oldMatrixRoomId, 'm.room.tombstone', '', {
                 body: `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`,
                 replacement_room: targetRoomId,
-            });
-            console.log("Sending power level update");
-            // Disallow people from talking, should provide incentive to join the new room
-            await client.sendStateEvent(oldMatrixRoomId, 'm.room.power_levels', '', {
-                "ban": 50,
-                "events": {
-                    "m.room.avatar": 50,
-                    "m.room.canonical_alias": 50,
-                    "m.room.history_visibility": 100,
-                    "m.room.name": 50,
-                    "m.room.power_levels": 100
-                },
-                "events_default": 100,
-                "invite": 0,
-                "kick": 50,
-                "redact": 50,
-                "state_default": 50,
-                "users": {
-                    "@gitterbot:matrix.org": 100
-                },
-                "users_default": 0            
             });
             const canonicalAlias = await client.getPublishedAlias(oldMatrixRoomId);
             if (canonicalAlias) {
                 console.log("Removing old alias");
                 await client.deleteRoomAlias(canonicalAlias);
             }
-            // In case it followed.
-            await client.leaveRoom(targetRoomId);
         }
         await fs.promises.writeFile('checkpoint.txt', `${index}`, 'utf-8');
         index++;
