@@ -54,7 +54,6 @@ async function migrateRoom({gitterRoomId, oldMatrixRoomId, alias}) {
             console.log(`${gitterRoomId} -> rate limit`);
             await new Promise((r) => setTimeout(r, ex.body.retry_after_ms + 100));
             targetRoomId = await client.joinRoom(alias);
-            return;
         } else {
             throw ex;
         }
