@@ -99,7 +99,7 @@ rl.on('close', async () => {
             await new Promise((r) => setTimeout(r, 3000));
             await migrateRoom(entry);
         } catch (ex) {
-            console.error(`Failed to migrate`, entry, ex);
+            console.error(`Failed to migrate`, entry, ex.message || ex.statusCode || ex.body || "No Error");
         }
         await fs.promises.writeFile('checkpoint.txt', `${index}`, 'utf-8');
         index++;
