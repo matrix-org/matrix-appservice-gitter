@@ -52,7 +52,7 @@ rl.on('close', async () => {
             continue;
         }
         console.log("Joining new room...");
-        const targetRoomId = await clientStoner.joinRoom(alias);
+        const targetRoomId = await client.joinRoom(alias);
         console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
         if (!targetRoomId) {
             console.log(`No target room for ${gitterRoomId}!`);
