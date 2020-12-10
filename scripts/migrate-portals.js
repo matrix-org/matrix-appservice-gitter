@@ -65,7 +65,7 @@ async function migrateRoom({gitterRoomId, oldMatrixRoomId, alias}) {
         ...powerLevels,
         "events_default": 100,    
     });
-    await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
+    await client.sendText(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
     console.log("Add tombstone...");
     await client.sendStateEvent(oldMatrixRoomId, 'm.room.tombstone', '', {
         body: `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`,
