@@ -22,6 +22,9 @@ rl.on('line', (line) => {
     if (!roomEntry.matrix_id) {
         return;
     }
+    if (!roomEntry.matrix_id.endsWith('matrix.org')) {
+        return;
+    }
     if (!roomEntry || !roomEntry.data || !roomEntry.data.portal) {
         return;
     }
