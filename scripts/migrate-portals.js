@@ -35,6 +35,49 @@ rl.on('line', (line) => {
     portalRooms.push({gitterRoomId, oldMatrixRoomId, alias});
 });
 
+async function migrateRoom({gitterRoomId, oldMatrixRoomId, alias}) {
+    const powerLevels = await client.getRoomStateEvent(oldMatrixRoomId, 'm.room.power_levels', '');
+    if (powerLevels.users["@gitterbot:matrix.org"] !== 100) {
+        console.log(`${gitterRoomId} ${oldMatrixRoomId} PL for bot is not 100.`);
+        await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
+        return;
+    }
+    console.log("Joining new room...");
+    let targetRoomId;
+    try {
+        targetRoomId = await client.joinRoom(alias);
+    } catch (ex) {
+        if (ex.body && ex.body.errcode === 'M_NOT_FOUND') {
+            console.log(`${gitterRoomId} -> does not exist anymore. Not bridging`);
+            return;
+        }
+    }
+    console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
+    if (!targetRoomId) {
+        console.log(`No target room for ${gitterRoomId}!`);
+    }
+    if (dryRun) {
+        return;
+    }
+    console.log("Sending power level update");
+    // Disallow people from talking, should provide incentive to join the new room
+    await client.sendStateEvent(oldMatrixRoomId, 'm.room.power_levels', '', {
+        ...powerLevels,
+        "events_default": 100,    
+    });
+    await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
+    console.log("Add tombstone...");
+    await client.sendStateEvent(oldMatrixRoomId, 'm.room.tombstone', '', {
+        body: `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`,
+        replacement_room: targetRoomId,
+    });
+    const canonicalAlias = await client.getPublishedAlias(oldMatrixRoomId);
+    if (canonicalAlias) {
+        console.log("Removing old alias");
+        await client.deleteRoomAlias(canonicalAlias);
+    }
+}
+
 rl.on('close', async () => {
     let index = 0;
     try {
@@ -42,47 +85,14 @@ rl.on('close', async () => {
     } catch (ex) {
         console.log(`Failed to fetch index, starting from the beginning`);
     }
+
     console.log(`Starting from index ${index}`);
-    for (const {gitterRoomId, oldMatrixRoomId, alias} of portalRooms.slice(index)) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const powerLevels = await client.getRoomStateEvent(oldMatrixRoomId, 'm.room.power_levels', '');
-        if (powerLevels.users["@gitterbot:matrix.org"] !== 100) {
-            console.log(`${gitterRoomId} ${oldMatrixRoomId} PL for bot is not 100.`);
-            await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
-            continue;
-        }
-        console.log("Joining new room...");
-        let targetRoomId;
+    for (const entry of portalRooms.slice(index)) {
         try {
-            targetRoomId = await client.joinRoom(alias);
+            await new Promise((r) => setTimeout(r, 3000));
+            await migrateRoom(entry);
         } catch (ex) {
-            if (ex.body && ex.body.errcode === 'M_NOT_FOUND') {
-                console.log(`${gitterRoomId} -> does not exist anymore. Not bridging`);
-                continue;
-            }
-        }
-        console.log(`${gitterRoomId} -> ${targetRoomId} (from: ${oldMatrixRoomId})`);
-        if (!targetRoomId) {
-            console.log(`No target room for ${gitterRoomId}!`);
-        }
-        if (!dryRun) {
-            console.log("Sending power level update");
-            // Disallow people from talking, should provide incentive to join the new room
-            await client.sendStateEvent(oldMatrixRoomId, 'm.room.power_levels', '', {
-                ...powerLevels,
-                "events_default": 100,    
-            });
-            await client.sendMessage(oldMatrixRoomId, `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`);
-            console.log("Add tombstone...");
-            await client.sendStateEvent(oldMatrixRoomId, 'm.room.tombstone', '', {
-                body: `The matrix.org Gitter bridge has been discontinued. You can view this channel on the new bridge over at ${alias}`,
-                replacement_room: targetRoomId,
-            });
-            const canonicalAlias = await client.getPublishedAlias(oldMatrixRoomId);
-            if (canonicalAlias) {
-                console.log("Removing old alias");
-                await client.deleteRoomAlias(canonicalAlias);
-            }
+            console.error(`Failed to migrate`, entry, ex);
         }
         await fs.promises.writeFile('checkpoint.txt', `${index}`, 'utf-8');
         index++;
