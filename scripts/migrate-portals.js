@@ -96,10 +96,13 @@ rl.on('close', async () => {
                 },
                 "users_default": 0            
             });
-            if (joined) {
-                console.log("Parting joined room");
-                await client.leaveRoom(targetRoomId);
+            const canonicalAlias = await client.getPublishedAlias(oldMatrixRoomId);
+            if (canonicalAlias) {
+                console.log("Removing old alias");
+                await client.deleteRoomAlias(canonicalAlias);
             }
+            // In case it followed.
+            await client.leaveRoom(targetRoomId);
         }
         await fs.promises.writeFile('checkpoint.txt', `${index}`, 'utf-8');
         index++;
