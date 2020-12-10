@@ -22,7 +22,7 @@ rl.on('line', (line) => {
     if (!roomEntry.matrix_id) {
         return;
     }
-    if (!roomEntry?.data?.portal) {
+    if (!roomEntry || !roomEntry.data || !roomEntry.data.portal) {
         return;
     }
     const gitterRoomId = roomEntry.remote_id;
