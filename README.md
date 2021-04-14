@@ -1,4 +1,4 @@
-## Depercation Notice
+## Deprecation Notice
 This bridge has been deprecated in favor of the [Native Glitter Bridge](https://www.matrix.org/docs/projects/bridge/native-gitter-bridge) that is automatically deployed for you.
 
 Installation
